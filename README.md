@@ -125,7 +125,7 @@ Airoh projects follow a few conventions that keep analyses fast, reproducible, a
 | `run-gm-volumes`    | Grey matter volume per region and per session, per subject, from FreeSurfer stats (`--subjects`, `--smoke`) |
 | `run-region-networks` | Majority Yeo-7 network of each Desikan region, pooled over subjects (`--subjects`, `--smoke`) |
 | `run-stability`     | Intra- vs inter-subject variation per region, tagged with its network |
-| `run-trajectories`  | Grey matter volume over sessions, per network and per subject (% deviation from own mean) |
+| `run-trajectories`  | Grey matter volume over sessions, per network and per subject (% deviation from own mean), and per-subject slopes |
 | `run-figure-layout` | Writes the montage's panel geometry to `output_data/figures/panel_sizes.json`; always re-runs |
 | `run-notebooks`     | Executes notebooks and saves figures to `output_data/figures/` |
 | `compose-figure`    | Renders `fig_anat_stability.svg` to PNG with Inkscape (optional binary) |
@@ -135,7 +135,7 @@ Airoh projects follow a few conventions that keep analyses fast, reproducible, a
 | `clean-gm-volumes`  | Removes the per-subject grey matter volume tables        |
 | `clean-region-networks` | Removes the region-to-network table                  |
 | `clean-stability`   | Removes the per-region stability table                   |
-| `clean-trajectories` | Removes the volume trajectory tables                    |
+| `clean-trajectories` | Removes the volume trajectory and slope tables          |
 | `clean-figures`     | Removes the figures dir (panels, notebook sentinels, panel_sizes.json) |
 | `clean-figure`      | Removes the composed montage PNG (never the hand-authored SVG) |
 | `clean-source`      | Removes all source data assets; routes to each `clean-{name}` |
