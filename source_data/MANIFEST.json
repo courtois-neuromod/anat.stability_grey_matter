@@ -1,19 +1,25 @@
 {
   "assets": {
-    "papers": {
-      "datalad_id": null,
-      "declared_source": "https://api.figshare.com/v2/file/download/9843721",
+    "cneuromod": {
+      "datalad_id": "8d29aa4a-b016-4e8e-ac87-fa9b8b8a9359",
+      "declared_source": "https://github.com/courtois-neuromod/cneuromod.all.git",
       "exists": true,
-      "git": null,
+      "git": {
+        "branch": "main",
+        "commit": "64bdac0367e9cc5a2948d5e78e6866954c9c7986",
+        "dirty": true,
+        "remote": "git@github.com:courtois-neuromod/cneuromod.all.git",
+        "toplevel": "/home/pbellec/git/anat.stability_grey_matter/source_data/cneuromod.all"
+      },
       "is_symlink": false,
-      "mode": "download",
-      "mtime": "2026-08-03T02:25:41+00:00",
-      "path": "source_data/YNIMG_BrainParcellation_summary.tsv",
-      "resolved_path": "/home/pbellec/git/airoh-mini/source_data/YNIMG_BrainParcellation_summary.tsv",
-      "sha256": "6eee27eb7ef7d280aa3ae5173e1e2abbb9c06ecfd77e99d2b0d7821633da16de",
-      "size_bytes": 65443
+      "mode": "datalad",
+      "mtime": "2026-10-05T01:54:52+00:00",
+      "path": "source_data/cneuromod.all",
+      "resolved_path": "/home/pbellec/git/anat.stability_grey_matter/source_data/cneuromod.all",
+      "sha256": null,
+      "size_bytes": null
     }
   },
-  "recorded_at": "2026-08-04T14:19:06+00:00",
+  "recorded_at": "2026-10-05T04:04:01+00:00",
   "schema": "airoh/manifest/1"
 }

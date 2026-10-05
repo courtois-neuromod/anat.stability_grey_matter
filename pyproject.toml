@@ -1,6 +1,6 @@
 [project]
-name = "airoh-mini"
-version = "0.3.0"
+name = "stability-grey-matter"
+version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "airoh>=0.5.0",
@@ -10,4 +10,21 @@ dependencies = [
     "nbconvert>=7.0",
     "matplotlib>=3.5",
     "pandas>=1.3",
+    "ruff>=0.16.10",
+    "pytest>=9.1.1",
+    "nibabel>=5.4.2",
+    "nilearn>=0.14.1",
 ]
+
+[tool.ruff]
+line-length = 100
+# Data folders can hold whole external repositories (cneuromod.all), whose
+# code is not ours to lint.
+extend-exclude = ["source_data", "output_data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.pytest.ini_options]
+# Only this project's tests, never those of datasets cloned into source_data/.
+testpaths = ["tests"]

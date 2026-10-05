@@ -4,7 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is the `airoh-mini` template — a starting point for structuring a reproducible data analysis. It is built on the [`invoke`](https://www.pyinvoke.org/) task runner. The `airoh` pip package provides reusable invoke tasks; this repo customizes them via `tasks.py` and `invoke.yaml`.
+**Stability of grey matter** — the CNeuroMod participants completed an anatomical assessment roughly every 3 months for five years (over 10 sessions each). This analysis measures how stable grey matter volume is within the main Yeo networks (plus a few subcortical regions), per participant, across those sessions.
+
+Built from the `airoh-mini` template on the [`invoke`](https://www.pyinvoke.org/) task runner. The `airoh` pip package provides reusable invoke tasks; this repo customizes them via `tasks.py` and `invoke.yaml`.
+
+### Project specifics
+
+- **Inputs** come from the `cneuromod.all` datalad superdataset (`datasets: cneuromod` in `invoke.yaml`), cloned into `source_data/`. Three nested anat subdatasets are installed and narrowly retrieved, configured under the project-specific `anat:` key: longitudinal FreeSurfer (pinned to branch `dev_rerun_t2`, the integration branch merging all per-subject template/longitudinal job branches; `main` holds only code), smriprep (native-space Desikan `aparcaseg`), and the atlases (native-space Schaefer, plus the MNI group atlas drawn as the figure's glass-brain network key — display only, `analysis/atlas_maps.py`). CNR was dropped (2026-10-04): it needs tissue segmentations we do not have in a usable form, so MRIQC is no longer installed.
+- **Only FreeSurfer text stats are usable.** Every annexed file of `freesurfer.longitudinal` (and of `smriprep.longitudinal`) has its only copy on the cluster store `ria-beluga-storage`; their S3 remotes are registered but empty. The `stats/*.stats` files are plain git, so they are always present. Hence volumes are per FreeSurfer region (Desikan `GrayVol` + PV-corrected `aseg`), not per Schaefer parcel. Do not add patterns for `.mgz` volumes or surfaces until that content is pushed to S3.
+- **Chunk = subject.** `anat.subjects` in `invoke.yaml` lists sub-01..sub-06. Per-subject steps take `--subjects sub-01,sub-02` and `--smoke` (first subject only). The longitudinal session folders are named `sub-XX_ses-YYY.long.sub-XX`.
+- **sub-04 is restricted** (data-use agreement); the others are CC0. Retrieval is tolerant: without credentials sub-04's annexed label volumes are skipped, so `run-region-networks` pools over the five open subjects, but its FreeSurfer stats are plain git and it still enters every volume, stability and trajectory table. Per-subject outputs (`gm_volumes/`, `volume_trajectories_subject.tsv`) are gitignored; only aggregates over subjects (`region_networks.tsv`, `stability_per_region.tsv`, `volume_trajectories.tsv`) are tracked.
+- **Steps:** `run-gm-volumes` (per subject: Desikan + subcortical + cerebellar volumes from `aparc.stats`/`aseg.stats`, `analysis/gm_volumes.py`) → `run-region-networks` (majority Yeo-7 network per Desikan region from native-space overlap of smriprep `aparcaseg` with the native Schaefer 1000/7, counts pooled over subjects, `analysis/region_networks.py`) → `run-stability` (intra- vs inter-subject coefficient of variation per region, tagged with its network, `analysis/stability.py`) → `run-trajectories` (volume over sessions as % deviation from each subject's own regional mean, averaged per network, per subject and over subjects, `analysis/trajectories.py`) → `run-figure-layout` → `run-notebooks` (`fig_anat_stability.ipynb`) → `compose-figure`.
+- **Regions are coloured by network, never aggregated into networks.** This was the user's choice over network volumes built from Desikan-to-network overlap weights: the network only colours a region; the volume is always the whole Desikan region's.
+- **Figure conventions mirror `cneuromod.all.connectome_stats`** (the connectome figure), by the user's choice: the same `NETWORK_COLORS` (canonical Yeo-7, Limbic darkened to `#B5B54E`, `cerebellum` teal, `subcortex` brown — lowercase names, as there), a glass-brain network key down the left edge, networks ordered from most to least stable (median within-subject CV over regions, computed in the notebook), x-tick colour bubbles on per-network panels, Okabe-Ito subject colours and markers, and legends as separate strips. Keep the two figures in step when changing either.
+- **Volume declines over sessions** in 52 of 54 subject x network trajectories (2026-10-05; the two exceptions are sub-04, 5 sessions). Ventricles enlarge in all 6 subjects and anti-correlate with GM session to session, so it is not a simple global scaling drift — but report the decline and its consistency only, never a cause (ageing, scanner, processing): the design cannot separate them. The x axis is **session order**: acquisition dates live in annexed BIDS `scans.tsv` files with no public URL, and BIDS lists fewer anat sessions than FreeSurfer has `.long` runs, so do not claim an interval ("3 months") per session. eTIV is no control here: the longitudinal stream copies it from the base template, so it is constant. Panel B keeps session ranks with ≥5 participants (`MIN_SUBJECTS_PER_SESSION` in the notebook, sessions 1–13); panel C shows each participant's full series.
+- **The figure:** A glass-brain key, B volume trajectory per network, C per subject (with linear fits), D within- vs between-subject CV per network as bars, with regions overlaid. Two panels were tried and dropped by the user: per-subject CV by network (hard to read) and a per-region within- vs between-subject CV scatter (not needed beside D). The caption is hand-written in `output_data/fig_anat_stability_caption.md` (2026-10-05, as in the connectome repo): its numbers were read from the tracked aggregate tables and the per-subject trajectories by hand, so re-check them after any rerun on different data, and keep it in step when a panel changes.
+- **Table schemas:** `analysis/gm_volumes.py` (`GM_VOLUME_COLUMNS`), `analysis/region_networks.py` (`REGION_NETWORK_COLUMNS`), `analysis/stability.py` (`STABILITY_COLUMNS`) and `analysis/trajectories.py` (`SUBJECT_TRAJECTORY_COLUMNS`, `NETWORK_TRAJECTORY_COLUMNS`) define the long-format columns of each table; the notebook relies on them.
+- `run-notebooks` skips, with a message, until `stability_per_region.tsv` exists, so the notebook never leaves an "already ran" marker for an empty run.
 
 ## Persona
 
@@ -13,44 +29,27 @@ Respond as Uncle Airoh: patient, warm, and wise. Assume the user may be new to c
 ## Setup
 
 ```bash
-# uv (recommended):
 uv sync
-
-# pip:
-pip install -r requirements.txt
-
-# conda:
-conda env create -n airoh_env -f environment.yml && conda activate airoh_env
 ```
+
+Fetching also needs the `datalad` and `git-annex` CLIs; `compose-figure` optionally needs Inkscape.
 
 ## Common Commands
 
-With `uv`:
 ```bash
-uv run invoke fetch           # Download source data, record the input manifest
+uv run invoke fetch           # Clone cneuromod.all, install anat subdatasets, get needed files, record the manifest
 uv run invoke run             # Full pipeline (cached: skips steps whose output exists)
 uv run invoke run --force     # Clean everything first, then run from scratch
-uv run invoke run-smoke       # Fast end-to-end check that the plumbing works
+uv run invoke run-smoke       # Fast end-to-end check on the first subject
+uv run invoke run-gm-volumes --subjects sub-01   # One step, a subset of subjects
 uv run invoke run-notebooks   # Execute notebooks, save figures to output_data/figures/
 uv run invoke run-figure-layout # Write the montage's panel geometry to panel_sizes.json (always re-runs)
-uv run invoke compose-figure  # Render figure_montage.svg to PNG with Inkscape (optional binary)
+uv run invoke compose-figure  # Render fig_anat_stability.svg to PNG with Inkscape (optional binary)
 uv run invoke verify          # Check code, config, data and docs still agree
 uv run invoke clean           # Remove output_data/ contents
 uv run invoke --list          # Show all available tasks
-```
-
-Without `uv` (activate your environment first):
-```bash
-invoke fetch              # Download source data (configured in invoke.yaml under files:)
-invoke run                # Full pipeline (cached: skips steps whose output exists)
-invoke run --force        # Clean everything first, then run from scratch
-invoke run-smoke          # Fast end-to-end check that the plumbing works
-invoke run-notebooks      # Execute notebooks, save figures to output_data/figures/
-invoke run-figure-layout  # Write the montage's panel geometry to panel_sizes.json (always re-runs)
-invoke compose-figure     # Render figure_montage.svg to PNG with Inkscape (optional binary)
-invoke verify              # Check code, config, data and docs still agree
-invoke clean              # Remove output_data/ contents
-invoke --list             # Show all available tasks
+uv run pytest                 # Unit tests (tests/)
+uv run ruff check .           # Linter (configured in pyproject.toml)
 ```
 
 ## Architecture
@@ -87,19 +86,19 @@ When results start looking stale or inconsistent, reach for `--force` rather tha
 
 **Notebook outputs must live in the notebook's own folder.** `run-notebooks` treats `{figures_base}/{notebook_stem}/` as the "already ran" marker for each notebook. A notebook that writes anywhere else never creates its marker and therefore re-runs on every single `invoke run`, however cheap the rest of the pipeline is.
 
-**Figures: the Inkscape montage pattern.** `output_data/figure_montage.svg` is hand-authored in Inkscape and is the **single source of truth for panel layout** — it links each notebook panel by relative path resolved from `output_data/` (e.g. `output_data/figures/figure_simulation/scatter.png`), and the box it places a panel in is that panel's true on-page size. `run-figure-layout` (`airoh.figures.figure_layout`) reads those boxes out of every entry in `invoke.yaml`'s `figures:` mapping and writes them to `output_data/figures/panel_sizes.json` on **every** `invoke run`; `figure_simulation.ipynb` calls `airoh.figures.panel_size(name, default)` to render each panel at exactly that size, so placement is 1:1 and text is never stretched. `compose-figure` (`airoh.figures.compose_figure`) then renders the montage to `figure_montage.png` via the Inkscape CLI, an optional system binary: a missing `inkscape` warns and skips the export rather than failing `invoke run`.
+**Figures: the Inkscape montage pattern.** `output_data/fig_anat_stability.svg` is hand-authored in Inkscape and is the **single source of truth for panel layout** — it links each notebook panel by relative path resolved from `output_data/` (e.g. `output_data/figures/fig_anat_stability/trajectories_networks.png`), and the box it places a panel in is that panel's true on-page size. `run-figure-layout` (`airoh.figures.figure_layout`) reads those boxes out of every entry in `invoke.yaml`'s `figures:` mapping and writes them to `output_data/figures/panel_sizes.json` on **every** `invoke run`; `fig_anat_stability.ipynb` calls `airoh.figures.panel_size(name, default)` to render each panel at exactly that size, so placement is 1:1 and text is never stretched. `compose-figure` (`airoh.figures.compose_figure`) then renders the montage to `fig_anat_stability.png` via the Inkscape CLI, an optional system binary: a missing `inkscape` warns and skips the export rather than failing `invoke run`.
 
 Resizing a box only fully takes effect after the panel it belongs to is re-rendered — and that panel is a notebook output, so it obeys the same existence-based caching as everything else (see **Caching is by existence**, above). `panel_sizes.json` and the composed montage update on every `invoke run` regardless, but a panel whose notebook did *not* re-run keeps its old pixel size, so Inkscape stretches it into the new box — precisely the problem this pattern exists to avoid. After resizing a box, run `invoke clean-figures && invoke run` (or `invoke run --force`) so the affected panel actually redraws at the new size.
 
-Two rules that must be kept wherever a notebook renders a montage panel: **never** pass `bbox_inches="tight"` (it resizes the canvas after the fact, which is exactly what breaks the 1:1 guarantee) — use `layout="constrained"` to reclaim margins inside the fixed canvas instead — and always save at the montage's DPI, so saved pixels equal `figsize × dpi`. That DPI is not hardcoded in the notebook: `run-notebooks` reads it from `figures:` (→ `figure_montage.dpi`, default 300) via the `montage_dpi` helper in `tasks.py` and exports it as `FIGURE_MONTAGE_DPI`, which the notebook reads. Composing the montage at a different resolution therefore re-sizes the panels with it, instead of silently breaking placement.
+Two rules that must be kept wherever a notebook renders a montage panel: **never** pass `bbox_inches="tight"` (it resizes the canvas after the fact, which is exactly what breaks the 1:1 guarantee) — use `layout="constrained"` to reclaim margins inside the fixed canvas instead — and always save at the montage's DPI, so saved pixels equal `figsize × dpi`. That DPI is not hardcoded in the notebook: `run-notebooks` reads it from `figures:` (→ `fig_anat_stability.dpi`, default 300) via the `montage_dpi` helper in `tasks.py` and exports it as `FIGURE_MONTAGE_DPI`, which the notebook reads. Composing the montage at a different resolution therefore re-sizes the panels with it, instead of silently breaking placement.
 
 `run-figure-layout` is a deliberate exception to the existence-based caching described above: it always re-runs, because it is cheap and a box resized in Inkscape must take effect on the very next `invoke run`, not only after a `clean`.
 
 **Task naming conventions:**
-- Fetch tasks are named `fetch-{name}` (e.g. `fetch-papers`), one per data asset; the umbrella `fetch` calls them all and routes a `--{name}-source` flag to each.
+- Fetch tasks are named `fetch-{name}` (here `fetch-cneuromod`), one per data asset; the umbrella `fetch` calls them all and routes a `--{name}-source` flag to each.
 - Analysis tasks are named `run-{name}` (e.g. `run-preprocessing`, `run-model`).
 - Cleaning tasks mirror them: `clean-{name}` removes only the outputs of the corresponding step. Granular clean tasks are what make a selective re-run possible, so every run step needs one.
-- The top-level `clean` task calls all `clean-{name}` tasks for **analysis** steps in its body — it only ever touches `output_data/`. Source assets have their own mirrored `clean-{name}` tasks (e.g. `clean-papers`) plus an umbrella `clean-source`, kept separate from `clean` since removing a source asset is a deliberate act (e.g. before re-pointing a stale symlink with `fetch-{name} --source`), not something `run --force` should ever do implicitly.
+- The top-level `clean` task calls all `clean-{name}` tasks for **analysis** steps in its body — it only ever touches `output_data/`. Source assets have their own mirrored `clean-{name}` tasks (here `clean-cneuromod`) plus an umbrella `clean-source`, kept separate from `clean` since removing a source asset is a deliberate act (e.g. before re-pointing a stale symlink with `fetch-{name} --source`), not something `run --force` should ever do implicitly.
 - The top-level `run` task calls all steps in its body, in order.
 - `verify` checks the project against its own documentation; see **Verification**.
 
@@ -256,15 +255,11 @@ called.
 
 **Naming:** Prefer self-explanatory names over brevity: `n_subjects` not `n`, `output_path` not `p`, `group_means` not `gm`. Avoid abbreviations unless universally known in the domain (`df` for a DataFrame is fine).
 
-**Linting:** The project linter and its configuration are chosen during `init` and stored in `pyproject.toml` or `ruff.toml`, depending on the package manager chosen at init (see **Setup** — only the `uv` path keeps `pyproject.toml`). Run it before committing. Never disable a lint rule without a comment explaining why.
+**Linting:** The project uses `ruff`, configured under `[tool.ruff]` in `pyproject.toml` (`uv run ruff check .`). Run it before committing. Never disable a lint rule without a comment explaining why.
 
-**Testing:** Two baseline checks, and they cover different failures. `invoke run-smoke` is the behavioural one: does the pipeline run end to end and produce something. `invoke verify` is the structural one: do the code, config, data and docs still describe the same project. Run both before committing; neither substitutes for the other. Add unit tests in a tests directory, using the project's chosen test framework, when a function contains non-trivial logic, has edge cases the smoke test won't catch, or is shared across multiple steps. Unit tests are optional for simple glue/orchestration code but encouraged for any pure transformation or computation logic in `analysis/`. The test framework and directory are configured during `init`.
+**Testing:** Two baseline checks, and they cover different failures. `invoke run-smoke` is the behavioural one: does the pipeline run end to end and produce something. `invoke verify` is the structural one: do the code, config, data and docs still describe the same project. Run both before committing; neither substitutes for the other. Add unit tests in a tests directory, using the project's chosen test framework, when a function contains non-trivial logic, has edge cases the smoke test won't catch, or is shared across multiple steps. Unit tests are optional for simple glue/orchestration code but encouraged for any pure transformation or computation logic in `analysis/`. This project uses `pytest`, with tests in `tests/` (`uv run pytest`).
 
-**Template cleanup:** When starting a new project from this template, remove the demo code before adding project-specific work:
-- Delete `run_simulation` from `tasks.py` and remove it from the `pre=` chains on `run_notebooks` and `run`
-- Delete `analysis/simulation.py` (and the `analysis/` folder if it stays empty)
-- Clear or replace `source_data/CONTENT.md` and `output_data/CONTENT.md` with project-specific descriptions
-- Update `invoke.yaml` (`files:`, paths) for the new project's data sources
+**Template cleanup:** Done at project initialization — the demo simulation step, demo notebooks and the figshare demo asset were removed, and the montage was renamed to `fig_anat_stability`. Nothing template-specific remains to delete.
 
 **Adding a new analysis step:** add a function to `analysis/`, add a `run-{name}` task and a matching `clean-{name}` task in `tasks.py`, call both from the bodies of the top-level `run` and `clean` tasks (see the `pre=` warning above — a body call, not `pre=`), and create or extend a notebook in `notebooks/` for visualization.
 

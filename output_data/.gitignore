@@ -1,7 +1,20 @@
 *.csv
 *.png
 
-# panel_sizes.json is fully derived from figure_montage.svg (which is
+# Per-subject tables (gm_volumes/, volume_trajectories_subject.tsv) are untracked:
+# they are derived from per-participant data, including restricted sub-04. The
+# aggregates over subjects, region_networks.tsv, stability_per_region.tsv and
+# volume_trajectories.tsv, are small and safe to track.
+gm_volumes/
+volume_trajectories_subject.tsv
+
+# Guard: no step writes volumes here, but keep this so a stray one can never
+# be committed by accident.
+*.nii
+*.nii.gz
+*.mgz
+
+# panel_sizes.json is fully derived from fig_anat_stability.svg (which is
 # tracked) and regenerated on every run — no need to also track it.
 figures/panel_sizes.json
 

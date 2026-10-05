@@ -13,8 +13,8 @@ output_data_dir: output_data
 # which airoh also uses as the "already ran" sentinel for that notebook.
 figures_dir: output_data/figures
 
-# Composed demo figure — the worked example of the airoh.figures Inkscape
-# montage pattern (see CLAUDE.md, "Figures: the Inkscape montage pattern").
+# Composed figure — the airoh.figures Inkscape montage pattern (see CLAUDE.md,
+# "Figures: the Inkscape montage pattern").
 #
 # `svg` is a pipeline *source*, hand-authored in Inkscape, even though it
 # lives under output_data/ — it has to, because it links the notebook panels
@@ -24,9 +24,9 @@ figures_dir: output_data/figures
 # renders each panel at exactly that size. `compose-figure` then renders it
 # with the Inkscape CLI, an optional external dependency (see README.md).
 figures:
-  figure_montage:
-    svg: output_data/figure_montage.svg
-    output: output_data/figure_montage.png
+  fig_anat_stability:
+    svg: output_data/fig_anat_stability.svg
+    output: output_data/fig_anat_stability.png
     dpi: 300
 
 # provenance records
@@ -47,36 +47,68 @@ verify:
   # Check names to skip entirely, e.g. [lint, tracked_size].
   skip_checks: []
   # Glob patterns exempt from the path and tracked-file checks.
-  # ruff.toml: CLAUDE.md mentions it conditionally (only non-uv projects
-  # have it), which otherwise trips the doc_paths check in this uv project.
-  ignore_paths: [ruff.toml]
+  ignore_paths:
+    # Paths *inside* the cneuromod.all superdataset, named in prose to say
+    # where inputs come from (and why the annexed ones cannot be used).
+    - anat/*
+    - stats/*.stats
   # Largest file git may track before the check fails (default 10 MB).
   max_tracked_bytes: 10485760
 
-# file sources
+# datalad datasets
 #
-# Each asset defines `output_file` plus `url` and/or `source`:
-#   - `url`    : download the file over HTTP into `output_file`
-#   - `source` : path to already-present data to symlink into `output_file`
-#                instead of downloading (a per-asset alternative to the
-#                `invoke fetch-{name} --source ...` flag)
-files:
-  papers:
-    url: https://api.figshare.com/v2/file/download/9843721
-    output_file: source_data/YNIMG_BrainParcellation_summary.tsv
-    # source: /path/to/existing/file.tsv   # symlink instead of downloading
+# The CNeuroMod superdataset. `invoke fetch-cneuromod` clones it (tree only, no
+# content) into `output_dir`, or symlinks an existing checkout given by
+# `--source` / a `source:` key. Only the anat subdatasets listed under `anat:`
+# below are then installed and partially retrieved. See CLAUDE.md, "Datalad
+# datasets, and plain assets".
+datasets:
+  cneuromod:
+    output_dir: source_data/cneuromod.all
+    url: https://github.com/courtois-neuromod/cneuromod.all.git
+    # source: /data/cneuromod.all   # symlink an existing checkout instead
 
-# datalad datasets (optional)
+# Anatomical inputs, all inside the cneuromod superdataset above.
 #
-# For a real datalad dataset (as opposed to a plain file/folder under
-# `files:`), use `airoh.datalad` instead of `airoh.acquisition.fetch_data` —
-# see CLAUDE.md, "Datalad datasets, and plain assets". Each entry supports
-# `output_dir` (where the dataset checkout lives), `url` (to `datalad clone`),
-# and `source` (an existing checkout to symlink instead). A plain
-# `{name: output_dir}` string is also accepted.
+# `subjects` is the chunk list for every per-subject step. sub-04 is under a
+# restricted data-use agreement: its content fails to download without
+# credentials, and fetch warns and carries on (see source_data/CONTENT.md).
 #
-# datasets:
-#   cneuromod:
-#     output_dir: source_data/cneuromod.all
-#     url: https://github.com/courtois-neuromod/cneuromod.all.git
-#     # source: /data/cneuromod.all   # symlink an existing checkout instead
+# Each subdataset entry gives its path inside cneuromod.all, optionally a
+# `branch` to check out, and the glob `patterns` (relative to the subdataset
+# root) whose content `fetch` retrieves. Patterns are deliberately narrow: the
+# full derivatives are hundreds of GB.
+anat:
+  subjects: [sub-01, sub-02, sub-03, sub-04, sub-05, sub-06]
+  freesurfer:
+    subdataset: anat/freesurfer.longitudinal
+    # The integration branch: it merges every freesurfer_template_* and
+    # freesurfer_longitudinal_* job branch (all 6 subjects, 76 .long sessions).
+    # `main` holds only code.
+    branch: dev_rerun_t2
+    # Only the text stats, which are tracked in git and so always present.
+    # Every annexed file of this dataset (aseg.mgz, ribbon.mgz, surfaces...)
+    # lives only on the cluster RIA store, so volumes cannot be retrieved yet
+    # (see source_data/CONTENT.md).
+    patterns:
+      - "sub-*_ses-*.long.sub-*/stats/aseg.stats"
+      - "sub-*_ses-*.long.sub-*/stats/lh.aparc.stats"
+      - "sub-*_ses-*.long.sub-*/stats/rh.aparc.stats"
+  smriprep:
+    subdataset: anat/smriprep
+    # Desikan labels in each subject's native T1w space, the grid the native
+    # Schaefer atlas below shares; used only to assign regions to networks.
+    patterns:
+      - "sub-*/anat/sub-*_desc-aparcaseg_dseg.nii.gz"
+  atlases:
+    subdataset: anat/atlases
+    # Native Schaefer 1000/7 per subject, and the MNI label table that names
+    # each parcel's network (the same 1000 labels).
+    patterns:
+      - "tpl-sub*T1w/*_res-anat_atlas-Schaefer2018_desc-1000Parcels7Networks_dseg.nii.gz"
+      - "tpl-MNI152NLin2009cAsym/*_atlas-Schaefer2018_desc-1000Parcels7Networks_dseg.tsv"
+      # Display only: the MNI group atlas (Schaefer 1000/7 + Tian S3 subcortex
+      # + Nettekoven cerebellum) whose network masks draw the figure's
+      # glass-brain network key (analysis/atlas_maps.py). No analysis reads it.
+      - "tpl-MNI152NLin2009cAsym/*_res-01_atlas-Schaefer2018TianS3NettekovenAsym_desc-1000Parcels7Networks50Subcort128Cereb_dseg.nii.gz"
+      - "tpl-MNI152NLin2009cAsym/*_atlas-Schaefer2018TianS3NettekovenAsym_desc-1000Parcels7Networks50Subcort128Cereb.tsv"

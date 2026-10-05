@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="180mm" height="128mm" viewBox="0 0 180 128">
+  <!-- Hand-authored montage: this SVG is the single source of truth for panel
+       layout (see CLAUDE.md, "Figures: the Inkscape montage pattern"). Each
+       <image> below links a notebook panel by relative path and the box it is
+       placed in is that panel's true on-page size — resize a box here in
+       Inkscape, then `invoke clean-figures && invoke run` regenerates that
+       panel at the new size, with text never stretched.
+
+       Layout mirrors cneuromod.all.connectome_stats' connectome figure: a
+       glass-brain network key down the left edge (A), stacked from most to
+       least stable, then two rows of panels. Legends are their own strips. -->
+  <rect x="0" y="0" width="180" height="128" fill="white" />
+  <g font-family="DejaVu Sans, Arial, sans-serif" fill="black">
+    <text x="0.5" y="3.6" font-size="3.2" font-weight="bold">A</text>
+    <text x="25" y="3.6" font-size="3.2" font-weight="bold">B</text>
+    <text x="29" y="3.6" font-size="2.6">Volume declines in every network</text>
+    <text x="104" y="3.6" font-size="3.2" font-weight="bold">C</text>
+    <text x="108" y="3.6" font-size="2.6">… and in every participant</text>
+    <text x="25" y="68.6" font-size="3.2" font-weight="bold">D</text>
+    <text x="29" y="68.6" font-size="2.6">Within- vs between-subject variation, by network</text>
+  </g>
+  <!-- A: network key, nine sagittal glass brains in stability order -->
+  <image xlink:href="figures/fig_anat_stability/network_maps.png"
+         x="0" y="5" width="22" height="122" />
+  <!-- B: GM volume over sessions, one line per network, mean over subjects -->
+  <image xlink:href="figures/fig_anat_stability/trajectories_networks.png"
+         x="25" y="6" width="76" height="49" />
+  <!-- C: the same, one line per subject over all regions, with linear fits -->
+  <image xlink:href="figures/fig_anat_stability/trajectories_subjects.png"
+         x="104" y="6" width="76" height="49" />
+  <image xlink:href="figures/fig_anat_stability/trajectories_subjects_legend.png"
+         x="104" y="56" width="76" height="5" />
+  <!-- D: median within- and between-subject CV per network, regions overlaid -->
+  <image xlink:href="figures/fig_anat_stability/cv_bars.png"
+         x="25" y="71" width="155" height="51" />
+  <image xlink:href="figures/fig_anat_stability/cv_bars_legend.png"
+         x="25" y="122.5" width="155" height="5" />
+</svg>

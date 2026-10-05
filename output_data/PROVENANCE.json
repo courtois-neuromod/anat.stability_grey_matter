@@ -1,10 +1,8 @@
 {
-  "command": "/home/pbellec/git/airoh-mini/.venv/bin/invoke run",
+  "command": "/home/pbellec/git/anat.stability_grey_matter/.venv/bin/invoke run",
   "environment": {
     "lockfiles": {
-      "environment.yml": "240993e42bc3a5a080735b449232ef6020f855afbd236f3330f5bf5ce44ad1be",
-      "requirements.txt": "66b0ee34be504a33a639c8b01da85c08f5ffcc4a199f601223a2a628794465d0",
-      "uv.lock": "79d3fe111a48b0597cb5360ee5a63f9e802f8f08ebcbb51b55249292ce6c7b11"
+      "uv.lock": "2b551a3daac6f37b10eef8efa3fe4c2fdc2c9e91b8610f7879036134e9de022a"
     },
     "packages": {
       "airoh": "0.5.0",
@@ -12,64 +10,123 @@
       "jupyter": "1.1.1",
       "matplotlib": "3.10.9",
       "nbconvert": "7.17.1",
+      "nibabel": "5.4.2",
+      "nilearn": "0.14.1",
       "pandas": "3.0.2",
-      "requests": "2.33.1"
+      "pytest": "9.1.1",
+      "requests": "2.33.1",
+      "ruff": "0.16.10"
     },
-    "platform": "Linux-6.8.0-136-generic-x86_64-with-glibc2.35",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
     "python": "3.14.0"
   },
   "inputs": {
     "assets": {
-      "papers": {
-        "commit": null,
-        "resolved_path": "/home/pbellec/git/airoh-mini/source_data/YNIMG_BrainParcellation_summary.tsv",
-        "sha256": "6eee27eb7ef7d280aa3ae5173e1e2abbb9c06ecfd77e99d2b0d7821633da16de"
+      "cneuromod": {
+        "commit": "64bdac0367e9cc5a2948d5e78e6866954c9c7986",
+        "resolved_path": "/home/pbellec/git/anat.stability_grey_matter/source_data/cneuromod.all",
+        "sha256": null
       }
     },
     "manifest_file": "source_data/MANIFEST.json",
-    "manifest_sha256": "0e29388df0642de2753c4994b85f3f570e54281988f01a6851def421460a6256"
+    "manifest_sha256": "b6907ffd22b4bdc0bd881da3454bcb4122bc0663472e460352667c77a6f75c3b"
   },
   "outputs": {
-    "figure_montage.png": {
-      "sha256": "cf882a4451ed2327a270aa58957d2c8dd36d83432f9686a60b23c9049af4bcd1",
-      "size_bytes": 47019
+    "fig_anat_stability.png": {
+      "sha256": "1c4a43cf1cef00b94575a94391d756adc5d1ed2a33c5a29554c11c5d7905bc5d",
+      "size_bytes": 817284
     },
-    "figure_montage.svg": {
-      "sha256": "630c4ad8e50546071c596cbf8d1becf859abf57a792e8466ef43de100b75e0b6",
-      "size_bytes": 794
+    "fig_anat_stability.svg": {
+      "sha256": "a3604aa96e9cab83cf2c94b92bd3680f26b00f357c49a6f7a55fbfaae1e0161b",
+      "size_bytes": 2529
     },
-    "figures/figure_simulation/histogram.png": {
-      "sha256": "04119ea7b302f8ab8f64054d3c26b250769a88bfa8b1a8302b25057205b25d10",
-      "size_bytes": 11361
+    "fig_anat_stability_caption.md": {
+      "sha256": "24190ff629ebfe453440a4b48766e4f48f4e42da44ea0e3e68f2cc55638da45a",
+      "size_bytes": 3252
     },
-    "figures/figure_simulation/scatter.png": {
-      "sha256": "9d870a5a26d607953029646111fd155cffc00521103db9c6fc7d4e1b0cf0eb70",
-      "size_bytes": 17530
+    "figures/fig_anat_stability/cv_bars.png": {
+      "sha256": "07a22f79c4b3de038137589bb75b7c1336e4a5af223f9cdee5ef7fb4692f00f6",
+      "size_bytes": 61443
+    },
+    "figures/fig_anat_stability/cv_bars_legend.png": {
+      "sha256": "4097a66c0eee17b49028dffca53589b62cca9f8759c98ca76e0ff075052c13fd",
+      "size_bytes": 10429
+    },
+    "figures/fig_anat_stability/network_maps.png": {
+      "sha256": "5f7570806212593af8c20489123659b23060cc7e73560dfd40e289bdfc3e9eca",
+      "size_bytes": 210997
+    },
+    "figures/fig_anat_stability/trajectories_networks.png": {
+      "sha256": "bafad99d59a430bcbc4eb081d1224e9204a25a7000cbc6fd202c725c9effc0f2",
+      "size_bytes": 137008
+    },
+    "figures/fig_anat_stability/trajectories_subjects.png": {
+      "sha256": "e27eca457c6174a328e8e131862d7fefce14c1f05cf6cad19fa06244ba1a360f",
+      "size_bytes": 149842
+    },
+    "figures/fig_anat_stability/trajectories_subjects_legend.png": {
+      "sha256": "08681650330621565116329ae5e3b0b977f5ee4c52473dd1398a9606cd9f55b4",
+      "size_bytes": 6372
     },
     "figures/panel_sizes.json": {
-      "sha256": "0cf8f2f7117147be054ead5e34a884806ccee40315e76965853937a0df51e590",
-      "size_bytes": 127
+      "sha256": "89e08525ac2c424ed065b33c58f98accad5d62936937daaf577d0464d04e2585",
+      "size_bytes": 437
     },
-    "figures/summary/authors.csv": {
-      "sha256": "3bb51140343a796ae2b20c389345595b940828136d9232b8c325e25e0e6f87a3",
-      "size_bytes": 340
+    "gm_volumes/sub-01_gm_volumes.tsv": {
+      "sha256": "0800e21124ac066d66b3c19c1928fde0f9bf374e389c73bed7dfdc3a409735c7",
+      "size_bytes": 50964
     },
-    "simulation_output.csv": {
-      "sha256": "ed2f89d7873468b3d0d1a3fcb8a61121d6405f4fdb0e7d647c8adedc1af90586",
-      "size_bytes": 114
+    "gm_volumes/sub-02_gm_volumes.tsv": {
+      "sha256": "4c7508a0b4d21824108b8a08489882b5e837a0a08c7dbfe9b2185d27ffa14fa4",
+      "size_bytes": 54595
+    },
+    "gm_volumes/sub-03_gm_volumes.tsv": {
+      "sha256": "fcdb9ed1da5e880e2c4c961299869c339f0da00f69320dab6d884245bb332866",
+      "size_bytes": 54581
+    },
+    "gm_volumes/sub-04_gm_volumes.tsv": {
+      "sha256": "b55c55964cba4226ae950bd5bed359d660d00dee55cea1fe63fb6196f0d2f34d",
+      "size_bytes": 18198
+    },
+    "gm_volumes/sub-05_gm_volumes.tsv": {
+      "sha256": "3e7300cb5492c3e7d78a731d9937bef4766ff0ef3812a06fc4124ae851cdcf0e",
+      "size_bytes": 47286
+    },
+    "gm_volumes/sub-06_gm_volumes.tsv": {
+      "sha256": "5d0b2bdec3c084c96d96a06c7feab429749153a3eee2ccfe203b7120769e6307",
+      "size_bytes": 50868
+    },
+    "region_networks.tsv": {
+      "sha256": "d842e226dae1114b5ab1fde63f9dd6d882f8285f377df7e52e10c735e8189ee9",
+      "size_bytes": 4004
+    },
+    "stability_per_region.tsv": {
+      "sha256": "a8b0505f06eb8c185ac70521c954df7fedb923e1d8e5d4a4dde82da475d1efbe",
+      "size_bytes": 7998
+    },
+    "volume_trajectories.tsv": {
+      "sha256": "c250ba4cc75065ba3cbf370fdfc0a082e61d6e40a1d432a8117375f9d5257297",
+      "size_bytes": 7026
+    },
+    "volume_trajectories_subject.tsv": {
+      "sha256": "3418dbb48d0c85c4d96baa4779e1a656b22b266e5af1903ca26bd5bfea2697a5",
+      "size_bytes": 27168
     }
   },
-  "recorded_at": "2026-08-04T14:19:14+00:00",
+  "recorded_at": "2026-10-05T04:25:01+00:00",
   "repository": {
-    "branch": "figures-example",
-    "commit": "45b4c9df7e2c221e75446d36a7fb21ab5aaba82f",
+    "branch": "main",
+    "commit": "0a6e6b5472a32837ab06b46716ca858cb8a54058",
     "dirty": true,
-    "remote": "git@github.com:airoh-pipeline/airoh-mini.git",
-    "toplevel": "/home/pbellec/git/airoh-mini"
+    "remote": "git@github.com:courtois-neuromod/anat.stability_grey_matter.git",
+    "toplevel": "/home/pbellec/git/anat.stability_grey_matter"
   },
   "schema": "airoh/provenance/1",
   "tasks": [
-    "run-simulation",
+    "run-gm-volumes",
+    "run-region-networks",
+    "run-stability",
+    "run-trajectories",
     "run-figure-layout",
     "run-notebooks",
     "compose-figure"

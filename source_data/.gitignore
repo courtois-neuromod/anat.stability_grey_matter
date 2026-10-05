@@ -1,3 +1,19 @@
+# The CNeuroMod superdataset checkout (a datalad clone or a symlink to one).
+# It is a git repository of its own; its exact commit is recorded in
+# MANIFEST.json instead.
+cneuromod.all
+
+# Paths that failed to retrieve last time (e.g. restricted sub-04 content).
+.fetch_failures.json
+
+# Guard: nothing above lands loose here today, but sub-04 is under a
+# restricted data-use agreement, so imaging volumes and FreeSurfer outputs must
+# never be committed by accident, wherever they end up.
+*.nii
+*.nii.gz
+*.mgz
+*.mgh
+*.stats
 *.tsv
 
 # Provenance is tracked: it records what the inputs actually were.
