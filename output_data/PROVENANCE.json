@@ -104,6 +104,10 @@
       "sha256": "a8b0505f06eb8c185ac70521c954df7fedb923e1d8e5d4a4dde82da475d1efbe",
       "size_bytes": 7998
     },
+    "trajectory_slopes.tsv": {
+      "sha256": "07028d752be78d38179d386ae264e07961a6c07837bc5dea90cc1a1a6178d703",
+      "size_bytes": 2340
+    },
     "volume_trajectories.tsv": {
       "sha256": "c250ba4cc75065ba3cbf370fdfc0a082e61d6e40a1d432a8117375f9d5257297",
       "size_bytes": 7026
@@ -113,10 +117,10 @@
       "size_bytes": 27168
     }
   },
-  "recorded_at": "2026-10-05T04:25:01+00:00",
+  "recorded_at": "2026-10-05T14:07:13+00:00",
   "repository": {
     "branch": "main",
-    "commit": "0a6e6b5472a32837ab06b46716ca858cb8a54058",
+    "commit": "b58b05208ade6dffba1a6a42a1a83a76edb53932",
     "dirty": true,
     "remote": "git@github.com:courtois-neuromod/anat.stability_grey_matter.git",
     "toplevel": "/home/pbellec/git/anat.stability_grey_matter"

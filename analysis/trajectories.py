@@ -18,6 +18,8 @@ Two tables:
 
 `slope_pct_per_session` fits one least-squares line per subject and network:
 its sign says whether that participant's volume declines in that network.
+`slope_table` gathers those slopes, plus one per subject over all regions
+(network `all`), into the table the paper quotes.
 """
 
 import numpy as np
@@ -25,6 +27,8 @@ import pandas as pd
 
 SUBJECT_TRAJECTORY_COLUMNS = ["subject", "network", "session_rank", "mean_deviation_pct",
                               "n_regions"]
+SLOPE_COLUMNS = ["subject", "network", "slope_pct_per_session", "n_sessions"]
+ALL_REGIONS = "all"
 NETWORK_TRAJECTORY_COLUMNS = ["network", "session_rank", "mean_deviation_pct",
                               "sem_deviation_pct", "n_subjects"]
 
@@ -70,3 +74,31 @@ def slope_pct_per_session(subject_table):
     slopes = {key: fit(group)
               for key, group in subject_table.groupby(["subject", "network"])}
     return pd.Series(slopes, name="slope_pct_per_session").rename_axis(["subject", "network"])
+
+
+def all_region_trajectories(subject_table):
+    """Per-subject trajectory over all regions, as network `all`.
+
+    Network means are weighted by their number of regions, so this is the mean
+    deviation over every region, not over networks.
+    """
+    weighted = subject_table.assign(
+        weighted=subject_table["mean_deviation_pct"] * subject_table["n_regions"])
+    summed = weighted.groupby(["subject", "session_rank"])[["weighted", "n_regions"]].sum()
+    trajectories = pd.DataFrame({
+        "network": ALL_REGIONS,
+        "mean_deviation_pct": summed["weighted"] / summed["n_regions"],
+        "n_regions": summed["n_regions"],
+    }).reset_index()
+    return trajectories[SUBJECT_TRAJECTORY_COLUMNS]
+
+
+def slope_table(subject_table):
+    """Slope of every subject x network trajectory, plus each subject over all regions."""
+    trajectories = pd.concat([subject_table, all_region_trajectories(subject_table)],
+                             ignore_index=True)
+    slopes = slope_pct_per_session(trajectories)
+    n_sessions = trajectories.groupby(["subject", "network"])["session_rank"].nunique()
+    table = pd.DataFrame({"slope_pct_per_session": slopes,
+                          "n_sessions": n_sessions}).reset_index()
+    return table[SLOPE_COLUMNS]

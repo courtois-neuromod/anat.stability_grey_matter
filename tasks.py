@@ -221,15 +221,17 @@ def run_trajectories(c):
     own regional mean, averaged per network: per subject and over subjects.
 
     Writes output_data/volume_trajectories.tsv (aggregate over subjects,
-    tracked) and output_data/volume_trajectories_subject.tsv (per participant,
-    untracked). Skipped when both exist, and when either input has not been
-    produced yet.
+    tracked), output_data/volume_trajectories_subject.tsv (per participant,
+    untracked) and output_data/trajectory_slopes.tsv (one least-squares slope
+    per subject and network, tracked). Skipped when all exist, and when either
+    input has not been produced yet.
     """
     import pandas as pd
 
     from analysis.stability import load_gm_volumes
     from analysis.trajectories import (
         network_trajectories,
+        slope_table,
         subject_trajectories,
         volume_deviations,
     )
@@ -237,8 +239,9 @@ def run_trajectories(c):
     output_dir = Path(c.config.get("output_data_dir"))
     network_file = output_dir / "volume_trajectories.tsv"
     subject_file = output_dir / "volume_trajectories_subject.tsv"
+    slopes_file = output_dir / "trajectory_slopes.tsv"
     networks_file = output_dir / "region_networks.tsv"
-    if network_file.is_file() and subject_file.is_file():
+    if network_file.is_file() and subject_file.is_file() and slopes_file.is_file():
         print("🫧 Skipping trajectories (output exists)")
         return
     volumes = load_gm_volumes(output_dir / "gm_volumes")
@@ -252,7 +255,8 @@ def run_trajectories(c):
     per_subject = subject_trajectories(deviations)
     per_subject.to_csv(subject_file, sep="\t", index=False)
     network_trajectories(per_subject).to_csv(network_file, sep="\t", index=False)
-    print(f"✅ Wrote {network_file} and {subject_file}")
+    slope_table(per_subject).to_csv(slopes_file, sep="\t", index=False)
+    print(f"✅ Wrote {network_file}, {subject_file} and {slopes_file}")
 
 def montage_dpi(c):
     """
@@ -441,11 +445,12 @@ def clean_stability(c):
 @task
 def clean_trajectories(c):
     """
-    Remove the volume trajectory tables (per network and per subject).
+    Remove the volume trajectory tables (per network and per subject) and slopes.
     """
     from airoh.utils import clean_folder
     clean_folder(c, "output_data_dir", "volume_trajectories.tsv")
     clean_folder(c, "output_data_dir", "volume_trajectories_subject.tsv")
+    clean_folder(c, "output_data_dir", "trajectory_slopes.tsv")
 
 @task
 def clean_figures(c):

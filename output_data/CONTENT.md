@@ -28,6 +28,12 @@ Once the pipeline is run, this folder will contain the following:
 - `volume_trajectories.tsv` — the same averaged over subjects per `network` and
   `session_rank`, with `sem_deviation_pct` and `n_subjects`. Written by
   `invoke run-trajectories`.
+- `trajectory_slopes.tsv` — least-squares slope of each subject's trajectory, in
+  percent per session; columns `subject, network, slope_pct_per_session,
+  n_sessions`. One row per subject and network, plus one per subject over all
+  84 regions (`network` = `all`, network means weighted by their number of
+  regions, as in panel C). A summary per participant, not volumes. Written by
+  `invoke run-trajectories`.
 - `figures/fig_anat_stability/` — the notebook's panels: `network_maps.png`
   (glass-brain network key), `trajectories_networks.png`,
   `trajectories_subjects.png`, `cv_bars.png`, and
@@ -60,6 +66,7 @@ checks.
 (including restricted sub-04) and are **not tracked by git**, nor are png files.
 Tracked: `region_networks.tsv`, `stability_per_region.tsv` and
 `volume_trajectories.tsv` (aggregates over subjects),
+`trajectory_slopes.tsv` (one slope per participant and network),
 `fig_anat_stability.svg` (hand-authored source),
 `fig_anat_stability_caption.md` (hand-written caption) and `PROVENANCE.json` (small,
 the record of where the untracked results came from — it changes on every run,
