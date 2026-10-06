@@ -1,5 +1,6 @@
 *.csv
 *.png
+!fig_anat_stability.png
 
 # Per-subject tables (gm_volumes/, volume_trajectories_subject.tsv) are untracked:
 # they are derived from per-participant data, including restricted sub-04. The
